@@ -95,30 +95,20 @@
             <!-- 点检统计：环形完成率仪表 + 完成率主视觉 -->
             <div class="section-title">点检统计</div>
             <div class="inspect-grid">
-                <div
-                    v-for="row in inspectionRings"
-                    :key="row.key"
-                    class="ring-card"
-                    :class="{ 'ring-card--warn': row.tone === 'warn' }"
-                >
-                    <div
-                        class="gauge"
-                        :class="'gauge--' + row.tone"
-                        :style="{ '--val': row.rate }"
-                    >
-                        <div class="ring-hole">
-                            <span class="ring-pct">{{ row.rate }}<i>%</i></span>
-                            <span class="ring-cap">点检率</span>
+                <div v-for="row in inspectionRings" :key="row.key" class="mini-card">
+                    <div class="mini-name">{{ row.title }}</div>
+                    <div class="mini-rows">
+                        <div class="mini-row">
+                            <span class="mini-label">管理台数</span>
+                            <span class="mini-value">{{ row.manage }}<i>台</i></span>
+                        </div>
+                        <div class="mini-row">
+                            <span class="mini-label">点检台数</span>
+                            <span class="mini-value">{{ row.check }}<i>台</i></span>
                         </div>
                     </div>
-                    <div class="ring-name">{{ row.title }}</div>
-                    <div class="ring-meta">
-                        <span>管理 {{ row.manage }}</span
-                        ><span class="ring-sep" /><span>点检 {{ row.check }}</span>
-                    </div>
-                    <span class="ring-tag" :class="'tag--' + row.tone">{{ row.status }}</span>
                 </div>
-                <div class="ring-card ring-card--hero">
+                <div class="mini-card mini-card--hero">
                     <div class="hero-cap">点检完成率</div>
                     <div class="hero-val">
                         {{ inspectionOverall.rate }}<span class="hero-unit">%</span>
@@ -858,168 +848,101 @@ onBeforeUnmount(() => {
     font-variant-numeric: tabular-nums;
 }
 
-/* 点检环形仪表卡片 */
+/* 点检紧凑文字卡片 */
 .inspect-grid {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
-    gap: 16px;
-    margin-bottom: 24px;
+    gap: 12px;
+    margin-bottom: 20px;
 }
-.ring-card {
+.mini-card {
     display: flex;
     flex-direction: column;
-    align-items: center;
     background: var(--wb-surface);
     border: 1px solid var(--wb-border);
-    border-radius: 14px;
-    padding: 20px 16px 18px;
-    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+    border-radius: 12px;
+    padding: 14px 16px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
-.ring-card:hover {
-    transform: translateY(-3px);
-    border-color: rgba(215, 65, 48, 0.28);
+.mini-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(215, 65, 48, 0.24);
     box-shadow: var(--wb-shadow-hover);
 }
-.ring-card--warn {
-    border-color: rgba(215, 65, 48, 0.45);
-    background: linear-gradient(180deg, rgba(215, 65, 48, 0.05), rgba(215, 65, 48, 0));
+.mini-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--wb-ink);
+    margin-bottom: 10px;
 }
-.gauge {
-    position: relative;
-    width: 104px;
-    height: 104px;
-    border-radius: 50%;
-    background: conic-gradient(
-        var(--ring-color) calc(var(--val) * 1%),
-        #eef0f3 calc(var(--val) * 1%)
-    );
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 14px;
-}
-.gauge--good {
-    --ring-color: #d74130;
-}
-.gauge--normal {
-    --ring-color: #ef8a5b;
-}
-.gauge--warn {
-    --ring-color: #e0a021;
-}
-.ring-hole {
-    width: 78px;
-    height: 78px;
-    border-radius: 50%;
-    background: var(--wb-surface);
+.mini-rows {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 2px;
+    gap: 8px;
 }
-.ring-card--warn .ring-hole {
-    background: #fdf6f5;
+.mini-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
 }
-.ring-pct {
-    font-size: 24px;
+.mini-label {
+    font-size: 12px;
+    color: var(--wb-faint);
+}
+.mini-value {
+    font-size: 18px;
     font-weight: 700;
     line-height: 1;
     color: var(--wb-ink);
     font-variant-numeric: tabular-nums;
-    letter-spacing: -0.5px;
+    letter-spacing: -0.3px;
 }
-.ring-pct i {
-    font-size: 12px;
-    font-weight: 600;
-    font-style: normal;
-    color: var(--wb-faint);
-    margin-left: 1px;
-}
-.ring-cap {
-    font-size: 11px;
-    color: var(--wb-faint);
-}
-.ring-name {
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--wb-ink);
-    margin-bottom: 6px;
-}
-.ring-meta {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 12px;
-    color: var(--wb-muted);
-    font-variant-numeric: tabular-nums;
-    margin-bottom: 10px;
-}
-.ring-sep {
-    width: 1px;
-    height: 11px;
-    background: var(--wb-border);
-}
-.ring-tag {
+.mini-value i {
     font-size: 11px;
     font-weight: 500;
-    padding: 2px 10px;
-    border-radius: 999px;
-}
-.tag--good {
-    color: #16a34a;
-    background: #ecfdf3;
-}
-.tag--normal {
-    color: #b5321f;
-    background: #fdecea;
-}
-.tag--warn {
-    color: #b7791f;
-    background: #fffaeb;
+    font-style: normal;
+    color: var(--wb-faint);
+    margin-left: 2px;
 }
 
 /* 完成率主视觉卡片 */
-.ring-card--hero {
+.mini-card--hero {
     justify-content: center;
+    gap: 8px;
     border: none;
     background: linear-gradient(140deg, #e8604f 0%, var(--wb-primary) 45%, var(--wb-primary-deep) 100%);
-    box-shadow: 0 16px 32px -16px rgba(215, 65, 48, 0.6);
+    box-shadow: 0 12px 26px -14px rgba(215, 65, 48, 0.6);
 }
-.ring-card--hero:hover {
+.mini-card--hero:hover {
     border: none;
-    box-shadow: 0 18px 38px -16px rgba(215, 65, 48, 0.7);
+    box-shadow: 0 14px 30px -14px rgba(215, 65, 48, 0.7);
 }
 .hero-cap {
-    align-self: flex-start;
     font-size: 13px;
     color: rgba(255, 255, 255, 0.9);
     letter-spacing: 0.2px;
 }
 .hero-val {
-    align-self: flex-start;
     display: flex;
     align-items: baseline;
-    margin: 6px 0 14px;
-    font-size: 46px;
+    font-size: 34px;
     font-weight: 700;
     line-height: 1;
     color: #fff;
     font-variant-numeric: tabular-nums;
-    letter-spacing: -1.5px;
+    letter-spacing: -1px;
 }
 .hero-unit {
-    font-size: 20px;
+    font-size: 16px;
     font-weight: 600;
     margin-left: 2px;
 }
 .hero-track {
     width: 100%;
-    height: 6px;
+    height: 5px;
     border-radius: 999px;
     background: rgba(255, 255, 255, 0.28);
     overflow: hidden;
-    margin-bottom: 12px;
 }
 .hero-fill {
     height: 100%;
@@ -1028,7 +951,6 @@ onBeforeUnmount(() => {
     transition: width 0.6s ease;
 }
 .hero-detail {
-    align-self: flex-start;
     font-size: 12px;
     color: rgba(255, 255, 255, 0.85);
     font-variant-numeric: tabular-nums;
