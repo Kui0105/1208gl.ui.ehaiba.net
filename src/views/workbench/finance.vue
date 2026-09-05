@@ -103,21 +103,20 @@
                             <span class="stat-dot" /><span>{{ item.title }}</span>
                         </div>
                         <template v-if="item.key !== 'completion_rate'"
-                            ><div class="stat-metrics">
-                                <div class="stat-metric">
-                                    <div class="stat-metric-num">
-                                        {{ inspectionStats[item.key]?.manage_count || 0
-                                        }}<span class="stat-metric-unit">台</span>
-                                    </div>
-                                    <span class="stat-metric-label">管理台数</span>
+                            ><div class="stat-rows">
+                                <div class="stat-row">
+                                    <span class="stat-row-label">管理台数</span>
+                                    <span class="stat-row-value"
+                                        >{{ inspectionStats[item.key]?.manage_count || 0
+                                        }}<span class="stat-row-unit">台</span></span
+                                    >
                                 </div>
-                                <span class="stat-vline" />
-                                <div class="stat-metric">
-                                    <div class="stat-metric-num">
-                                        {{ inspectionStats[item.key]?.check_count || 0
-                                        }}<span class="stat-metric-unit">台</span>
-                                    </div>
-                                    <span class="stat-metric-label">点检台数</span>
+                                <div class="stat-row">
+                                    <span class="stat-row-label">点检台数</span>
+                                    <span class="stat-row-value"
+                                        >{{ inspectionStats[item.key]?.check_count || 0
+                                        }}<span class="stat-row-unit">台</span></span
+                                    >
                                 </div>
                             </div></template
                         ><template v-else
@@ -142,24 +141,21 @@
                         ><div class="stat-title">
                             <span class="stat-dot stat-dot--amber" /><span>{{ item.title }}</span>
                         </div>
-                        <div class="stat-metrics">
-                            <div class="stat-metric">
-                                <div class="stat-metric-num">
-                                    {{ workOrderStats[item.key]?.order_count || 0
-                                    }}<span class="stat-metric-unit">单</span>
-                                </div>
-                                <span class="stat-metric-label">工单数量</span>
+                        <div class="stat-rows">
+                            <div class="stat-row">
+                                <span class="stat-row-label">工单数量</span>
+                                <span class="stat-row-value"
+                                    >{{ workOrderStats[item.key]?.order_count || 0
+                                    }}<span class="stat-row-unit">单</span></span
+                                >
                             </div>
-                            <template v-if="item.hasHours"
-                                ><span class="stat-vline" />
-                                <div class="stat-metric">
-                                    <div class="stat-metric-num">
-                                        {{ workOrderStats[item.key]?.hour_total || 0
-                                        }}<span class="stat-metric-unit">h</span>
-                                    </div>
-                                    <span class="stat-metric-label">工时合计</span>
-                                </div></template
-                            >
+                            <div v-if="item.hasHours" class="stat-row">
+                                <span class="stat-row-label">工时合计</span>
+                                <span class="stat-row-value"
+                                    >{{ workOrderStats[item.key]?.hour_total || 0
+                                    }}<span class="stat-row-unit">h</span></span
+                                >
+                            </div>
                         </div></el-card
                     ></el-col
                 ></el-row
@@ -829,42 +825,38 @@ onBeforeUnmount(() => {
 .stat-dot--amber {
     background: #f59e0b;
 }
-.stat-metrics {
-    display: flex;
-    align-items: center;
-    gap: 16px;
+.stat-rows {
     margin-top: auto;
-}
-.stat-metric {
     display: flex;
     flex-direction: column;
-    gap: 6px;
 }
-.stat-metric-num {
+.stat-row {
     display: flex;
     align-items: baseline;
-    font-size: 28px;
+    justify-content: space-between;
+    padding: 9px 0;
+    white-space: nowrap;
+}
+.stat-row + .stat-row {
+    border-top: 1px dashed var(--wb-border);
+}
+.stat-row-label {
+    font-size: 12px;
+    color: var(--wb-faint);
+}
+.stat-row-value {
+    font-size: 22px;
     font-weight: 700;
     line-height: 1;
     color: var(--wb-ink);
     font-variant-numeric: tabular-nums;
     letter-spacing: -0.5px;
 }
-.stat-metric-unit {
-    margin-left: 3px;
+.stat-row-unit {
+    margin-left: 2px;
     font-size: 12px;
     font-weight: 500;
     color: var(--wb-faint);
-}
-.stat-metric-label {
-    font-size: 12px;
-    color: var(--wb-faint);
-}
-.stat-vline {
-    width: 1px;
-    height: 34px;
-    background: var(--wb-border);
-    flex-shrink: 0;
 }
 .stat-value {
     display: flex;
