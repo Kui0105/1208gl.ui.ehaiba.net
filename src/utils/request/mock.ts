@@ -57,6 +57,17 @@ const MENU = [
                 component: 'workbench/data',
                 is_show: 1,
                 is_cache: 1
+            },
+            {
+                id: 12,
+                pid: 1,
+                type: 'C',
+                paths: 'workbench/finance',
+                name: '财务统计',
+                icon: 'el-icon-Money',
+                component: 'workbench/finance',
+                is_show: 1,
+                is_cache: 1
             }
         ]
     },
@@ -390,6 +401,141 @@ function buildOrderList(data: Record<string, any>) {
     return { count: total, page_no: page, page_size: size, lists }
 }
 
+/* ---------------------- 财务统计（finance.vue）数据 ---------------------- */
+
+const LEVEL_ALL = [
+    { value: 1, label: '初级工程师' },
+    { value: 2, label: '中级工程师' },
+    { value: 3, label: '高级工程师' },
+    { value: 4, label: '资深专家' }
+]
+
+const SATISFACTION_DIMENSIONS = {
+    normal: [
+        'product_quality_reliability',
+        'operation_maintenance_convenience',
+        'work_efficiency',
+        'delivery_timeliness',
+        'sales_policy_finance',
+        'parts_supply_timeliness',
+        'parts_cost_performance',
+        'after_sales_timeliness',
+        'after_sales_skill',
+        'repurchase_recommendation'
+    ],
+    operation: ['service_attitude', 'service_skill', 'service_quality', 'training_effect']
+}
+
+// 稳定伪随机：同一 seed 输出固定，保证刷新数据不跳变
+function seeded(seed: number) {
+    let s = seed % 2147483647
+    if (s <= 0) s += 2147483646
+    return () => (s = (s * 16807) % 2147483647) / 2147483647
+}
+
+function buildFinanceExtend() {
+    const rand = seeded(20241205)
+    const pick = (min: number, max: number) => Math.round(min + rand() * (max - min))
+    const inspection_stats = {
+        wet_spray: { manage_count: pick(30, 60), check_count: pick(20, 45) },
+        rock_drill: { manage_count: pick(25, 50), check_count: pick(18, 40) },
+        arch_charge: { manage_count: pick(15, 35), check_count: pick(10, 28) },
+        mine: { manage_count: pick(20, 45), check_count: pick(15, 35) },
+        completion_rate: { rate: pick(82, 96), completed_count: pick(260, 320), dispatched_count: pick(320, 360) }
+    }
+    const work_order_stats = {
+        repair: { order_count: pick(120, 180), hour_total: pick(300, 520) },
+        technical: { order_count: pick(40, 80), hour_total: pick(120, 260) },
+        handover: { order_count: pick(20, 50), hour_total: 0 },
+        acceptance: { order_count: pick(15, 40), hour_total: 0 },
+        other: { order_count: pick(10, 30), hour_total: 0 },
+        preventive: { order_count: pick(50, 90), hour_total: 0 }
+    }
+    const buildDims = (keys: string[], max: number) =>
+        keys.map((key) => ({ key, average_score: Number((max * (0.7 + rand() * 0.28)).toFixed(2)) }))
+    const satisfaction_stats = {
+        normal: {
+            evaluated_count: pick(180, 260),
+            average_total_score: pick(78, 94),
+            dimensions: buildDims(SATISFACTION_DIMENSIONS.normal, 10)
+        },
+        operation: {
+            evaluated_count: pick(90, 160),
+            average_total_score: pick(30, 38),
+            dimensions: buildDims(SATISFACTION_DIMENSIONS.operation, 10)
+        }
+    }
+    const monthLabels = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月']
+    const quarterLabels = ['第一季度', '第二季度', '第三季度', '第四季度']
+    const trendLine = (labels: string[], base: number, span: number) =>
+        labels.map(() => Number((base + rand() * span).toFixed(1)))
+    const satisfaction_trend = {
+        month: {
+            labels: monthLabels,
+            normal: trendLine(monthLabels, 80, 15),
+            operation: trendLine(monthLabels, 32, 6)
+        },
+        quarter: {
+            labels: quarterLabels,
+            normal: trendLine(quarterLabels, 82, 12),
+            operation: trendLine(quarterLabels, 33, 5)
+        }
+    }
+    return { inspection_stats, work_order_stats, satisfaction_stats, satisfaction_trend }
+}
+
+function buildFinance(data: Record<string, any>) {
+    const scope = data.scope === 'operation' ? 'operation' : 'normal'
+    const page = Number(data.page_no || 1)
+    const size = Number(data.page_size || 10)
+    const total = ENGINEER_NAMES.length
+    const start = (page - 1) * size
+    const rand = seeded(scope === 'operation' ? 8801 : 6602)
+    const val = (min: number, max: number) => Math.round(min + rand() * (max - min))
+    const lists = Array.from({ length: Math.max(0, Math.min(size, total - start)) }, (_, i) => {
+        const idx = start + i
+        const base = {
+            engineer_name: ENGINEER_NAMES[idx % ENGINEER_NAMES.length],
+            engineer_level: LEVEL_ALL[idx % 3].label,
+            satisfaction_average_score: Number((3.6 + rand() * 1.3).toFixed(2))
+        }
+        if (scope === 'operation') {
+            return {
+                ...base,
+                operation_order_count: val(20, 90),
+                operation_work_anchor_rod: val(50, 260),
+                operation_work_excavation_volume: val(200, 900),
+                operation_work_wet_spray_volume: val(120, 600),
+                operation_work_arch_meter: val(30, 180),
+                operation_work_resin_anchor_rod: val(20, 140),
+                operation_work_pipe_joint_anchor_rod: val(15, 120),
+                operation_work_mesh_install: val(10, 90),
+                operation_work_other: val(0, 40)
+            }
+        }
+        const inspection = val(20, 60)
+        const repair = val(15, 55)
+        const preventive = val(5, 30)
+        const technical = val(2, 18)
+        const handover = val(1, 12)
+        const other = val(0, 10)
+        const acceptance = val(1, 14)
+        return {
+            ...base,
+            managed_machine_count: val(8, 40),
+            inspection_order_count: inspection,
+            repair_order_count: repair,
+            preventive_order_count: preventive,
+            technical_order_count: technical,
+            handover_order_count: handover,
+            other_order_count: other,
+            acceptance_order_count: acceptance,
+            total_order_count: inspection + repair + preventive + technical + handover + other + acceptance
+        }
+    })
+    return { count: total, page_no: page, page_size: size, lists, extend: buildFinanceExtend() }
+}
+
 /* ---------------------- 路由分发 ---------------------- */
 
 function resolve(url: string, data: Record<string, any>) {
@@ -408,6 +554,12 @@ function resolve(url: string, data: Record<string, any>) {
             return envelope({ user: USER_INFO, permissions: ['*'], menu: MENU })
         case '/auth.admin/editSelf':
             return envelope({})
+
+        // 工程师类型 / 等级（财务统计筛选项）
+        case '/auth.admin/engineer_type_all':
+            return envelope(ENGINEER_TYPES)
+        case '/auth.admin/engineer_level_all':
+            return envelope(LEVEL_ALL)
 
         // 全局配置
         case '/config/getConfig':
@@ -440,6 +592,8 @@ function resolve(url: string, data: Record<string, any>) {
             return envelope(buildEngineerLists(data))
         case '/workbench/engineer_detail':
             return envelope(buildEngineerDetail(data))
+        case '/workbench/finance':
+            return envelope(buildFinance(data))
         case '/config/all_region':
             return envelope(ALL_REGION)
 
