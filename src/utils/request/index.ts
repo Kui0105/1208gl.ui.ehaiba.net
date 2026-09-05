@@ -10,6 +10,7 @@ import router from '@/router'
 import { clearAuthInfo, getToken } from '../auth'
 import feedback from '../feedback'
 import { Axios } from './axios'
+import mockAdapter from './mock'
 import type { AxiosHooks } from './type'
 
 // 处理axios的钩子函数
@@ -93,6 +94,8 @@ const defaultOptions: AxiosRequestConfig = {
     timeout: configs.timeout,
     // 基础接口地址
     baseURL: configs.baseUrl,
+    // 前端 Mock 适配器：拦截全部请求返回模拟数据（无后端预览）
+    adapter: mockAdapter,
     //请求头
     headers: { 'Content-Type': ContentTypeEnum.JSON, version: configs.version },
     // 处理 axios的钩子函数

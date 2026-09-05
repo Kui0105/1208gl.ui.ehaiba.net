@@ -37,11 +37,13 @@ function getElementPlusStylePaths() {
 }
 
 export default defineConfig({
-    base: '/admin/',
+    base: '/',
     server: {
         host: '0.0.0.0',
+        port: 3000,
         hmr: true,
-        open: true
+        // 允许在 v0 / Vercel Sandbox 预览域名下访问
+        allowedHosts: true
     },
     plugins: [
         vue(),
