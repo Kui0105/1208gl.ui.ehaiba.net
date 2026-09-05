@@ -92,74 +92,76 @@
                 name="operation"
         /></el-tabs>
         <div v-if="activeScope === 'normal'" class="stats-section">
+            <!-- 点检统计：环形完成率仪表 + 完成率主视觉 -->
             <div class="section-title">点检统计</div>
-            <el-row :gutter="16" class="stats-row"
-                ><el-col v-for="item in inspectionCards" :key="item.key" :span="4"
-                    ><el-card
-                        shadow="never"
-                        class="stat-card"
-                        :class="{ 'stat-card--hero': item.key === 'completion_rate' }"
-                        ><div class="stat-title">
-                            <span class="stat-dot" /><span>{{ item.title }}</span>
+            <div class="inspect-grid">
+                <div
+                    v-for="row in inspectionRings"
+                    :key="row.key"
+                    class="ring-card"
+                    :class="{ 'ring-card--warn': row.tone === 'warn' }"
+                >
+                    <div
+                        class="gauge"
+                        :class="'gauge--' + row.tone"
+                        :style="{ '--val': row.rate }"
+                    >
+                        <div class="ring-hole">
+                            <span class="ring-pct">{{ row.rate }}<i>%</i></span>
+                            <span class="ring-cap">点检率</span>
                         </div>
-                        <template v-if="item.key !== 'completion_rate'"
-                            ><div class="stat-rows">
-                                <div class="stat-row">
-                                    <span class="stat-row-label">管理台数</span>
-                                    <span class="stat-row-value"
-                                        >{{ inspectionStats[item.key]?.manage_count || 0
-                                        }}<span class="stat-row-unit">台</span></span
-                                    >
-                                </div>
-                                <div class="stat-row">
-                                    <span class="stat-row-label">点检台数</span>
-                                    <span class="stat-row-value"
-                                        >{{ inspectionStats[item.key]?.check_count || 0
-                                        }}<span class="stat-row-unit">台</span></span
-                                    >
-                                </div>
-                            </div></template
-                        ><template v-else
-                            ><div class="stat-value">
-                                {{ inspectionStats.completion_rate?.rate || 0
-                                }}<span class="stat-value-unit">%</span>
-                            </div>
-                            <div class="stat-detail">
-                                完成 / 已派单 {{
-                                    inspectionStats.completion_rate?.completed_count || 0
-                                }}
-                                / {{ inspectionStats.completion_rate?.dispatched_count || 0 }}
-                            </div></template
-                        ></el-card
-                    ></el-col
-                ></el-row
-            >
-            <div class="section-title">工单统计</div>
-            <el-row :gutter="16" class="stats-row"
-                ><el-col v-for="item in workOrderCards" :key="item.key" :span="4"
-                    ><el-card shadow="never" class="stat-card"
-                        ><div class="stat-title">
-                            <span class="stat-dot stat-dot--amber" /><span>{{ item.title }}</span>
+                    </div>
+                    <div class="ring-name">{{ row.title }}</div>
+                    <div class="ring-meta">
+                        <span>管理 {{ row.manage }}</span
+                        ><span class="ring-sep" /><span>点检 {{ row.check }}</span>
+                    </div>
+                    <span class="ring-tag" :class="'tag--' + row.tone">{{ row.status }}</span>
+                </div>
+                <div class="ring-card ring-card--hero">
+                    <div class="hero-cap">点检完成率</div>
+                    <div class="hero-val">
+                        {{ inspectionOverall.rate }}<span class="hero-unit">%</span>
+                    </div>
+                    <div class="hero-track">
+                        <div class="hero-fill" :style="{ width: inspectionOverall.rate + '%' }" />
+                    </div>
+                    <div class="hero-detail">
+                        完成 / 已派单
+                        <b>{{ inspectionOverall.completed }} / {{ inspectionOverall.dispatched }}</b>
+                    </div>
+                </div>
+            </div>
+            <!-- 工单统计：按数量排序的横向条形排行榜 -->
+            <div class="section-head">
+                <div class="section-title">工单统计</div>
+                <div class="section-meta">共 {{ orderRanking.total }} 单 · 按数量排序</div>
+            </div>
+            <div class="rank-list">
+                <div v-for="row in orderRanking.rows" :key="row.key" class="rank-item">
+                    <span class="rank-no" :class="{ 'rank-no--top': row.rank < 3 }">{{
+                        row.rank + 1
+                    }}</span>
+                    <div class="rank-body">
+                        <div class="rank-head">
+                            <span class="rank-name">{{ row.title }}</span>
+                            <span class="rank-metric"
+                                ><b>{{ row.count }}</b> 单<template v-if="row.hasHours">
+                                    · {{ row.hours }} h</template
+                                >
+                                · {{ row.pct }}%</span
+                            >
                         </div>
-                        <div class="stat-rows">
-                            <div class="stat-row">
-                                <span class="stat-row-label">工单数量</span>
-                                <span class="stat-row-value"
-                                    >{{ workOrderStats[item.key]?.order_count || 0
-                                    }}<span class="stat-row-unit">单</span></span
-                                >
-                            </div>
-                            <div v-if="item.hasHours" class="stat-row">
-                                <span class="stat-row-label">工时合计</span>
-                                <span class="stat-row-value"
-                                    >{{ workOrderStats[item.key]?.hour_total || 0
-                                    }}<span class="stat-row-unit">h</span></span
-                                >
-                            </div>
-                        </div></el-card
-                    ></el-col
-                ></el-row
-            >
+                        <div class="rank-track">
+                            <div
+                                class="rank-fill"
+                                :class="{ 'rank-fill--top': row.rank < 3 }"
+                                :style="{ width: row.width + '%' }"
+                            />
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
         <div class="charts-row">
             <div class="satisfaction-section">
@@ -438,6 +440,64 @@ const inspectionCards = [
         { key: 'operation_work_mesh_install', label: '网片安装' },
         { key: 'operation_work_other', label: '其它' }
     ]
+// 点检可视化：由 manage_count / check_count 派生点检率与状态（不改动数据结构）
+const inspectionRings = computed(() => {
+    const machines = inspectionCards.filter((c) => c.key !== 'completion_rate')
+    const rows = machines.map((m) => {
+        const s: any = inspectionStats.value[m.key] || {}
+        const manage = Number(s.manage_count || 0)
+        const check = Number(s.check_count || 0)
+        const rate = manage ? Math.round((check / manage) * 100) : 0
+        return { key: m.key, title: m.title, manage, check, rate }
+    })
+    const avg = rows.length ? rows.reduce((sum, r) => sum + r.rate, 0) / rows.length : 0
+    return rows.map((r) => {
+        let status = '达标',
+            tone = 'good'
+        if (r.rate < 75) {
+            status = '需关注'
+            tone = 'warn'
+        } else if (r.rate < avg) {
+            status = '低于均值'
+            tone = 'normal'
+        }
+        return { ...r, status, tone }
+    })
+})
+const inspectionOverall = computed(() => {
+    const c: any = inspectionStats.value.completion_rate || {}
+    return {
+        rate: Number(c.rate || 0),
+        completed: c.completed_count || 0,
+        dispatched: c.dispatched_count || 0
+    }
+})
+// 工单可视化：按数量排序 + 占比 + 条宽（按最大值缩放）
+const orderRanking = computed(() => {
+    const all = workOrderCards.map((c) => {
+        const s: any = workOrderStats.value[c.key] || {}
+        return {
+            key: c.key,
+            title: c.title,
+            count: Number(s.order_count || 0),
+            hours: Number(s.hour_total || 0),
+            hasHours: c.hasHours
+        }
+    })
+    const total = all.reduce((sum, o) => sum + o.count, 0)
+    const max = all.reduce((m, o) => Math.max(m, o.count), 0) || 1
+    return {
+        total,
+        rows: [...all]
+            .sort((a, b) => b.count - a.count)
+            .map((o, i) => ({
+                ...o,
+                rank: i,
+                pct: total ? Math.round((o.count / total) * 1000) / 10 : 0,
+                width: Math.round((o.count / max) * 100)
+            }))
+    }
+})
 const formatDate = (date: any) => {
     const d = new Date(date)
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
@@ -512,9 +572,9 @@ const renderCharts = async () => {
         satisfaction = activeSatisfaction.value
     satisfactionChart?.dispose()
     trendChart?.dispose()
-    const barTop = group === 'operation' ? '#34d399' : '#60a5fa',
-        barBottom = group === 'operation' ? '#059669' : '#2563eb',
-        accentDeep = group === 'operation' ? '#047857' : '#1d4ed8'
+    const barTop = group === 'operation' ? '#34d399' : '#f07a68',
+        barBottom = group === 'operation' ? '#059669' : '#d74130',
+        accentDeep = group === 'operation' ? '#047857' : '#b5321f'
     if (satisfactionChartRef.value) {
         satisfactionChart = echarts.init(satisfactionChartRef.value)
         satisfactionChart.setOption({
@@ -628,8 +688,8 @@ const renderCharts = async () => {
                     },
                     areaStyle: {
                         color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                            { offset: 0, color: group === 'operation' ? 'rgba(16,185,129,0.22)' : 'rgba(37,99,235,0.22)' },
-                            { offset: 1, color: group === 'operation' ? 'rgba(16,185,129,0)' : 'rgba(37,99,235,0)' }
+                            { offset: 0, color: group === 'operation' ? 'rgba(16,185,129,0.22)' : 'rgba(215,65,48,0.22)' },
+                            { offset: 1, color: group === 'operation' ? 'rgba(16,185,129,0)' : 'rgba(215,65,48,0)' }
                         ])
                     },
                     label: {
@@ -701,8 +761,8 @@ onBeforeUnmount(() => {
     --wb-ink: #1e293b;
     --wb-muted: #64748b;
     --wb-faint: #94a3b8;
-    --wb-primary: #2563eb;
-    --wb-primary-deep: #1d4ed8;
+    --wb-primary: #d74130;
+    --wb-primary-deep: #b5321f;
     --wb-radius: 16px;
     --wb-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 12px 28px -14px rgba(15, 23, 42, 0.14);
     --wb-shadow-hover: 0 2px 6px rgba(15, 23, 42, 0.06), 0 20px 40px -18px rgba(15, 23, 42, 0.24);
@@ -780,123 +840,278 @@ onBeforeUnmount(() => {
     border-radius: 3px;
 }
 
-/* 指标卡片 */
+/* 统计区块 */
 .stats-section {
     margin-bottom: 4px;
 }
-.stats-row {
-    margin-bottom: 16px;
-}
-.stat-card {
-    height: 100%;
-    border: 1px solid var(--wb-border) !important;
-    border-radius: 14px !important;
-    overflow: hidden;
-    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
-}
-.stat-card :deep(.el-card__body) {
-    padding: 18px;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-}
-.stat-card:hover {
-    transform: translateY(-3px);
-    border-color: rgba(37, 99, 235, 0.28) !important;
-    box-shadow: var(--wb-shadow-hover) !important;
-}
-.stat-title {
+.section-head {
     display: flex;
     align-items: center;
-    gap: 7px;
-    font-size: 13px;
-    color: var(--wb-muted);
-    margin-bottom: 18px;
-    letter-spacing: 0.2px;
-    white-space: nowrap;
-}
-.stat-dot {
-    width: 7px;
-    height: 7px;
-    flex-shrink: 0;
-    border-radius: 2px;
-    background: var(--wb-primary);
-}
-.stat-dot--amber {
-    background: #f59e0b;
-}
-.stat-rows {
-    margin-top: auto;
-    display: flex;
-    flex-direction: column;
-}
-.stat-row {
-    display: flex;
-    align-items: baseline;
     justify-content: space-between;
-    padding: 9px 0;
-    white-space: nowrap;
 }
-.stat-row + .stat-row {
-    border-top: 1px dashed var(--wb-border);
+.section-head .section-title {
+    margin-bottom: 14px;
 }
-.stat-row-label {
+.section-meta {
     font-size: 12px;
     color: var(--wb-faint);
+    font-variant-numeric: tabular-nums;
 }
-.stat-row-value {
-    font-size: 22px;
+
+/* 点检环形仪表卡片 */
+.inspect-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+}
+.ring-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: var(--wb-surface);
+    border: 1px solid var(--wb-border);
+    border-radius: 14px;
+    padding: 20px 16px 18px;
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+.ring-card:hover {
+    transform: translateY(-3px);
+    border-color: rgba(215, 65, 48, 0.28);
+    box-shadow: var(--wb-shadow-hover);
+}
+.ring-card--warn {
+    border-color: rgba(215, 65, 48, 0.45);
+    background: linear-gradient(180deg, rgba(215, 65, 48, 0.05), rgba(215, 65, 48, 0));
+}
+.gauge {
+    position: relative;
+    width: 104px;
+    height: 104px;
+    border-radius: 50%;
+    background: conic-gradient(
+        var(--ring-color) calc(var(--val) * 1%),
+        #eef0f3 calc(var(--val) * 1%)
+    );
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 14px;
+}
+.gauge--good {
+    --ring-color: #d74130;
+}
+.gauge--normal {
+    --ring-color: #ef8a5b;
+}
+.gauge--warn {
+    --ring-color: #e0a021;
+}
+.ring-hole {
+    width: 78px;
+    height: 78px;
+    border-radius: 50%;
+    background: var(--wb-surface);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+}
+.ring-card--warn .ring-hole {
+    background: #fdf6f5;
+}
+.ring-pct {
+    font-size: 24px;
     font-weight: 700;
     line-height: 1;
     color: var(--wb-ink);
     font-variant-numeric: tabular-nums;
     letter-spacing: -0.5px;
 }
-.stat-row-unit {
-    margin-left: 2px;
+.ring-pct i {
     font-size: 12px;
-    font-weight: 500;
-    color: var(--wb-faint);
-}
-.stat-value {
-    display: flex;
-    align-items: baseline;
-    font-size: 38px;
-    font-weight: 700;
-    line-height: 1;
-    font-variant-numeric: tabular-nums;
-    letter-spacing: -1px;
-    margin-top: auto;
-    margin-bottom: 8px;
-}
-.stat-value-unit {
-    font-size: 18px;
     font-weight: 600;
-    margin-left: 2px;
-}
-.stat-detail {
-    font-size: 12px;
-    line-height: 18px;
+    font-style: normal;
     color: var(--wb-faint);
+    margin-left: 1px;
+}
+.ring-cap {
+    font-size: 11px;
+    color: var(--wb-faint);
+}
+.ring-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--wb-ink);
+    margin-bottom: 6px;
+}
+.ring-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--wb-muted);
+    font-variant-numeric: tabular-nums;
+    margin-bottom: 10px;
+}
+.ring-sep {
+    width: 1px;
+    height: 11px;
+    background: var(--wb-border);
+}
+.ring-tag {
+    font-size: 11px;
+    font-weight: 500;
+    padding: 2px 10px;
+    border-radius: 999px;
+}
+.tag--good {
+    color: #16a34a;
+    background: #ecfdf3;
+}
+.tag--normal {
+    color: #b5321f;
+    background: #fdecea;
+}
+.tag--warn {
+    color: #b7791f;
+    background: #fffaeb;
 }
 
 /* 完成率主视觉卡片 */
-.stat-card--hero {
-    border: none !important;
-    background: linear-gradient(135deg, #3b82f6 0%, var(--wb-primary-deep) 100%) !important;
-    box-shadow: 0 16px 32px -16px rgba(37, 99, 235, 0.6) !important;
+.ring-card--hero {
+    justify-content: center;
+    border: none;
+    background: linear-gradient(140deg, #e8604f 0%, var(--wb-primary) 45%, var(--wb-primary-deep) 100%);
+    box-shadow: 0 16px 32px -16px rgba(215, 65, 48, 0.6);
 }
-.stat-card--hero .stat-title {
+.ring-card--hero:hover {
+    border: none;
+    box-shadow: 0 18px 38px -16px rgba(215, 65, 48, 0.7);
+}
+.hero-cap {
+    align-self: flex-start;
+    font-size: 13px;
     color: rgba(255, 255, 255, 0.9);
+    letter-spacing: 0.2px;
 }
-.stat-card--hero .stat-dot {
-    background: rgba(255, 255, 255, 0.85);
+.hero-val {
+    align-self: flex-start;
+    display: flex;
+    align-items: baseline;
+    margin: 6px 0 14px;
+    font-size: 46px;
+    font-weight: 700;
+    line-height: 1;
+    color: #fff;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -1.5px;
 }
-.stat-card--hero .stat-value {
-    color: #ffffff;
+.hero-unit {
+    font-size: 20px;
+    font-weight: 600;
+    margin-left: 2px;
 }
-.stat-card--hero .stat-detail {
-    color: rgba(255, 255, 255, 0.82);
+.hero-track {
+    width: 100%;
+    height: 6px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.28);
+    overflow: hidden;
+    margin-bottom: 12px;
+}
+.hero-fill {
+    height: 100%;
+    border-radius: 999px;
+    background: #fff;
+    transition: width 0.6s ease;
+}
+.hero-detail {
+    align-self: flex-start;
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.85);
+    font-variant-numeric: tabular-nums;
+}
+.hero-detail b {
+    color: #fff;
+    font-weight: 600;
+}
+
+/* 工单横向条形排行榜 */
+.rank-list {
+    background: var(--wb-surface);
+    border: 1px solid var(--wb-border);
+    border-radius: 14px;
+    padding: 8px 22px;
+    margin-bottom: 4px;
+}
+.rank-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 15px 0;
+}
+.rank-item + .rank-item {
+    border-top: 1px dashed var(--wb-border);
+}
+.rank-no {
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--wb-faint);
+    background: #f1f5f9;
+    font-variant-numeric: tabular-nums;
+}
+.rank-no--top {
+    color: #fff;
+    background: linear-gradient(135deg, #e8604f, var(--wb-primary-deep));
+}
+.rank-body {
+    flex: 1;
+    min-width: 0;
+}
+.rank-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+.rank-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--wb-ink);
+}
+.rank-metric {
+    font-size: 12px;
+    color: var(--wb-muted);
+    font-variant-numeric: tabular-nums;
+}
+.rank-metric b {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--wb-ink);
+}
+.rank-track {
+    height: 8px;
+    border-radius: 999px;
+    background: #eef0f3;
+    overflow: hidden;
+}
+.rank-fill {
+    height: 100%;
+    border-radius: 999px;
+    background: #d7cfce;
+    transition: width 0.6s ease;
+}
+.rank-fill--top {
+    background: linear-gradient(90deg, #f07a68, var(--wb-primary-deep));
 }
 
 /* 满意度 / 趋势：并排一行 */
@@ -943,7 +1158,7 @@ onBeforeUnmount(() => {
     font-size: 12px;
     font-weight: 600;
     color: var(--wb-primary-deep);
-    background: rgba(37, 99, 235, 0.08);
+    background: rgba(215, 65, 48, 0.08);
     padding: 3px 10px;
     border-radius: 999px;
     display: inline-block;
@@ -997,7 +1212,7 @@ onBeforeUnmount(() => {
 .table-section :deep(.el-table) {
     --el-table-border-color: var(--wb-border);
     --el-table-header-text-color: var(--wb-ink);
-    --el-table-row-hover-bg-color: #f0f6ff;
+    --el-table-row-hover-bg-color: #fdf2f0;
     border-radius: 12px;
     overflow: hidden;
 }
@@ -1026,7 +1241,7 @@ onBeforeUnmount(() => {
     font-size: 13px;
     font-weight: 600;
     color: #fff;
-    background: linear-gradient(135deg, #4f9bff, #2563eb);
+    background: linear-gradient(135deg, #f07a68, #d74130);
 }
 .cell-engineer-name {
     font-weight: 600;
@@ -1041,8 +1256,8 @@ onBeforeUnmount(() => {
     font-size: 12px;
     font-weight: 500;
     color: var(--wb-primary-deep);
-    background: rgba(37, 99, 235, 0.08);
-    border: 1px solid rgba(37, 99, 235, 0.16);
+    background: rgba(215, 65, 48, 0.08);
+    border: 1px solid rgba(215, 65, 48, 0.16);
 }
 
 /* 工单总数强调 */
