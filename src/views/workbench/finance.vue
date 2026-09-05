@@ -153,48 +153,52 @@
                 ></el-row
             >
         </div>
-        <div class="satisfaction-section">
-            <el-card shadow="hover" class="satisfaction-card"
-                ><div class="satisfaction-card-head">
-                    <div>
+        <div class="charts-row">
+            <div class="satisfaction-section">
+                <el-card shadow="hover" class="satisfaction-card"
+                    ><div class="satisfaction-card-head">
+                        <div>
+                            <div class="card-title">
+                                {{
+                                    activeScope === 'operation'
+                                        ? '操作工单满意度平均总分'
+                                        : '非操作工单满意度平均总分'
+                                }}
+                            </div>
+                            <div class="satisfaction-count">
+                                有效评价 {{ activeSatisfaction.evaluated_count || 0 }} 条
+                            </div>
+                        </div>
+                        <div class="satisfaction-total">
+                            <span class="satisfaction-total-value">{{
+                                activeSatisfaction.average_total_score || 0
+                            }}</span
+                            ><span class="satisfaction-total-unit"
+                                >/ {{ activeScope === 'operation' ? 40 : 100 }} 分</span
+                            >
+                        </div>
+                    </div>
+                    <div ref="satisfactionChartRef" class="satisfaction-chart"
+                /></el-card>
+            </div>
+            <div class="satisfaction-trend-section">
+                <el-card shadow="hover" class="satisfaction-trend-card"
+                    ><div class="satisfaction-trend-head">
                         <div class="card-title">
                             {{
                                 activeScope === 'operation'
-                                    ? '操作工单满意度平均总分'
-                                    : '非操作工单满意度平均总分'
+                                    ? '操作工单满意度趋势'
+                                    : '非操作工单满意度趋势'
                             }}
                         </div>
-                        <div class="satisfaction-count">
-                            有效评价 {{ activeSatisfaction.evaluated_count || 0 }} 条
-                        </div>
-                    </div>
-                    <div class="satisfaction-total">
-                        <span class="satisfaction-total-value">{{
-                            activeSatisfaction.average_total_score || 0
-                        }}</span
-                        ><span class="satisfaction-total-unit"
-                            >/ {{ activeScope === 'operation' ? 40 : 100 }} 分</span
+                        <el-radio-group v-model="satisfactionTrendPeriod" size="small"
+                            ><el-radio-button label="month">月度</el-radio-button
+                            ><el-radio-button label="quarter">季度</el-radio-button></el-radio-group
                         >
                     </div>
-                </div>
-                <div ref="satisfactionChartRef" class="satisfaction-chart"
-            /></el-card>
-        </div>
-        <div class="satisfaction-trend-section">
-            <div class="satisfaction-trend-head">
-                <div class="section-title">
-                    {{
-                        activeScope === 'operation' ? '操作工单满意度趋势' : '非操作工单满意度趋势'
-                    }}
-                </div>
-                <el-radio-group v-model="satisfactionTrendPeriod" size="small"
-                    ><el-radio-button label="month">月度</el-radio-button
-                    ><el-radio-button label="quarter">季度</el-radio-button></el-radio-group
-                >
+                    <div ref="trendChartRef" class="satisfaction-trend-chart"
+                /></el-card>
             </div>
-            <el-card shadow="hover" class="satisfaction-trend-card"
-                ><div ref="trendChartRef" class="satisfaction-trend-chart"
-            /></el-card>
         </div>
         <div class="table-section">
             <div class="table-head">
@@ -343,7 +347,7 @@ const operationMachineTypes = [
         { value: 9, label: '曲臂凿岩台车' },
         { value: 10, label: '矿用设备' }
     ],
-    operationProjects = ['基建', '水利', '矿山']
+    operationProjects = ['基建', '��利', '矿山']
 const filterForm = reactive<any>({
     dept: '',
     engineer: '',
@@ -851,16 +855,31 @@ onBeforeUnmount(() => {
     color: rgba(255, 255, 255, 0.8);
 }
 
-/* 满意度 / 趋势 */
-.satisfaction-section,
-.satisfaction-trend-section {
+/* 满意度 / 趋势：并排一行 */
+.charts-row {
+    display: flex;
+    gap: 16px;
     margin-bottom: 16px;
 }
-.satisfaction-card {
-    min-height: 420px;
+.satisfaction-section,
+.satisfaction-trend-section {
+    flex: 1 1 0;
+    min-width: 0;
+    display: flex;
 }
-.satisfaction-card :deep(.el-card__body) {
+.satisfaction-card,
+.satisfaction-trend-card {
+    flex: 1;
+    min-height: 430px;
+    display: flex;
+    flex-direction: column;
+}
+.satisfaction-card :deep(.el-card__body),
+.satisfaction-trend-card :deep(.el-card__body) {
     padding: 22px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
 }
 .satisfaction-card-head,
 .satisfaction-trend-head {
@@ -868,6 +887,7 @@ onBeforeUnmount(() => {
     align-items: center;
     justify-content: space-between;
     margin-bottom: 8px;
+    min-height: 46px;
 }
 .card-title {
     font-size: 15px;
@@ -900,19 +920,11 @@ onBeforeUnmount(() => {
     color: var(--wb-faint);
     font-size: 13px;
 }
-.satisfaction-chart {
-    width: 100%;
-    height: 330px;
-}
-.satisfaction-trend-card {
-    min-height: 330px;
-}
-.satisfaction-trend-card :deep(.el-card__body) {
-    padding: 16px 22px 22px;
-}
+.satisfaction-chart,
 .satisfaction-trend-chart {
     width: 100%;
-    height: 280px;
+    flex: 1;
+    min-height: 320px;
 }
 
 /* 表格 */
@@ -1030,6 +1042,9 @@ onBeforeUnmount(() => {
 }
 
 @media (max-width: 1200px) {
+    .charts-row {
+        flex-direction: column;
+    }
     .satisfaction-total-value {
         font-size: 32px;
     }
