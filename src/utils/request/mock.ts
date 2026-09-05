@@ -48,17 +48,6 @@ const MENU = [
         is_show: 1,
         children: [
             {
-                id: 11,
-                pid: 1,
-                type: 'C',
-                paths: 'workbench',
-                name: '工作台',
-                icon: 'el-icon-Monitor',
-                component: 'workbench/data',
-                is_show: 1,
-                is_cache: 1
-            },
-            {
                 id: 12,
                 pid: 1,
                 type: 'C',
@@ -66,6 +55,17 @@ const MENU = [
                 name: '财务统计',
                 icon: 'el-icon-Money',
                 component: 'workbench/finance',
+                is_show: 1,
+                is_cache: 1
+            },
+            {
+                id: 11,
+                pid: 1,
+                type: 'C',
+                paths: 'workbench',
+                name: '工作台',
+                icon: 'el-icon-Monitor',
+                component: 'workbench/data',
                 is_show: 1,
                 is_cache: 1
             }
