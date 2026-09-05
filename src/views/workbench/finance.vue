@@ -201,16 +201,31 @@
                 <div class="section-title">工程师工作量明细</div>
                 <div class="table-note">列表中的工单数量均按复审通过工单统计。</div>
             </div>
-            <el-table :data="currentTableData" size="small" style="width: 100%" v-loading="loading"
-                ><el-table-column
-                    prop="engineer_name"
-                    label="工程师姓名"
-                    min-width="110"
-                /><el-table-column
-                    prop="engineer_level"
-                    label="工程师等级"
-                    min-width="90"
-                /><template v-if="activeScope === 'operation'"
+            <el-table
+                :data="currentTableData"
+                size="large"
+                stripe
+                style="width: 100%"
+                :header-cell-style="{ background: '#f6f9fe' }"
+                v-loading="loading"
+                ><el-table-column prop="engineer_name" label="工程师姓名" min-width="150" fixed
+                    ><template #default="scope"
+                        ><div class="cell-engineer">
+                            <span class="cell-avatar">{{
+                                (scope.row.engineer_name || '工').slice(-1)
+                            }}</span
+                            ><span class="cell-engineer-name">{{
+                                scope.row.engineer_name
+                            }}</span>
+                        </div></template
+                    ></el-table-column
+                ><el-table-column prop="engineer_level" label="工程师等级" min-width="110"
+                    ><template #default="scope"
+                        ><span class="level-tag">{{
+                            scope.row.engineer_level
+                        }}</span></template
+                    ></el-table-column
+                ><template v-if="activeScope === 'operation'"
                     ><el-table-column
                         prop="operation_order_count"
                         label="操作工单数量"
@@ -218,10 +233,16 @@
                     /><el-table-column
                         prop="satisfaction_average_score"
                         label="满意度平均分"
-                        min-width="110"
-                        ><template #default="scope">{{
-                            Number(scope.row.satisfaction_average_score || 0).toFixed(2)
-                        }}</template></el-table-column
+                        min-width="120"
+                        ><template #default="scope"
+                            ><span
+                                class="score-badge"
+                                :class="scoreLevel(scope.row.satisfaction_average_score)"
+                                >{{
+                                    Number(scope.row.satisfaction_average_score || 0).toFixed(2)
+                                }}</span
+                            ></template
+                        ></el-table-column
                     ><el-table-column
                         v-for="item in operationWorkloads"
                         :key="item.key"
@@ -265,17 +286,25 @@
                         prop="acceptance_order_count"
                         label="交验"
                         min-width="65"
-                    /><el-table-column
-                        prop="total_order_count"
-                        label="工单总数"
-                        min-width="85"
-                    /><el-table-column
+                    /><el-table-column prop="total_order_count" label="工单总数" min-width="95"
+                        ><template #default="scope"
+                            ><span class="total-num">{{
+                                scope.row.total_order_count ?? 0
+                            }}</span></template
+                        ></el-table-column
+                    ><el-table-column
                         prop="satisfaction_average_score"
                         label="满意度平均分"
-                        min-width="110"
-                        ><template #default="scope">{{
-                            Number(scope.row.satisfaction_average_score || 0).toFixed(2)
-                        }}</template></el-table-column
+                        min-width="120"
+                        ><template #default="scope"
+                            ><span
+                                class="score-badge"
+                                :class="scoreLevel(scope.row.satisfaction_average_score)"
+                                >{{
+                                    Number(scope.row.satisfaction_average_score || 0).toFixed(2)
+                                }}</span
+                            ></template
+                        ></el-table-column
                     ></template
                 ></el-table
             >
@@ -308,7 +337,7 @@ const activeScope = ref<Scope>('normal'),
     engineerTypeOptions = ref<any[]>([])
 const operationMachineTypes = [
         { value: 1, label: '湿喷机' },
-        { value: 2, label: '立拱装药台车' },
+        { value: 2, label: '立拱装���台车' },
         { value: 3, label: '直臂凿岩台车' },
         { value: 7, label: '锚杆台车' },
         { value: 9, label: '曲臂凿岩台车' },
@@ -471,37 +500,68 @@ const renderCharts = async () => {
         satisfaction = activeSatisfaction.value
     satisfactionChart?.dispose()
     trendChart?.dispose()
+    const barTop = group === 'operation' ? '#34d399' : '#60a5fa',
+        barBottom = group === 'operation' ? '#059669' : '#2563eb',
+        accentDeep = group === 'operation' ? '#047857' : '#1d4ed8'
     if (satisfactionChartRef.value) {
         satisfactionChart = echarts.init(satisfactionChartRef.value)
         satisfactionChart.setOption({
-            tooltip: { trigger: 'axis' },
-            grid: { top: 30, right: 24, bottom: 105, left: 70 },
+            tooltip: {
+                trigger: 'axis',
+                axisPointer: { type: 'shadow', shadowStyle: { color: 'rgba(37,99,235,0.06)' } },
+                backgroundColor: 'rgba(15,23,42,0.92)',
+                borderWidth: 0,
+                padding: [8, 12],
+                textStyle: { color: '#fff', fontSize: 12 }
+            },
+            grid: { top: 24, right: 24, bottom: 110, left: 56 },
             xAxis: {
                 type: 'category',
                 data: (satisfaction.dimensions || []).map(
                     (item: any) => satisfactionDimensionTitles[item.key] || item.key
                 ),
-                axisLabel: { interval: 0, width: 80, overflow: 'break', lineHeight: 18 }
+                axisTick: { show: false },
+                axisLine: { lineStyle: { color: '#e6ebf2' } },
+                axisLabel: {
+                    interval: 0,
+                    width: 68,
+                    overflow: 'break',
+                    lineHeight: 15,
+                    color: '#64748b',
+                    fontSize: 11
+                }
             },
             yAxis: {
                 type: 'value',
                 min: 0,
                 max: 10,
                 interval: 2,
-                name: '平均分',
-                nameLocation: 'middle',
-                nameGap: 44,
-                nameRotate: 0,
-                nameTextStyle: { lineHeight: 18 }
+                axisLabel: { color: '#94a3b8', fontSize: 11 },
+                splitLine: { lineStyle: { color: '#eef2f8', type: 'dashed' } }
             },
             series: [
                 {
                     type: 'bar',
+                    barMaxWidth: 26,
+                    barMinHeight: 2,
                     data: (satisfaction.dimensions || []).map((item: any) =>
                         Number(item.average_score || 0)
                     ),
-                    itemStyle: { color: group === 'operation' ? '#67c23a' : '#409eff' },
-                    label: { show: true, position: 'top' }
+                    itemStyle: {
+                        borderRadius: [6, 6, 0, 0],
+                        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                            { offset: 0, color: barTop },
+                            { offset: 1, color: barBottom }
+                        ])
+                    },
+                    emphasis: { itemStyle: { color: accentDeep } },
+                    label: {
+                        show: true,
+                        position: 'top',
+                        color: '#334155',
+                        fontSize: 11,
+                        fontWeight: 600
+                    }
                 }
             ]
         })
@@ -510,19 +570,29 @@ const renderCharts = async () => {
     if (trendChartRef.value) {
         trendChart = echarts.init(trendChartRef.value)
         trendChart.setOption({
-            tooltip: { trigger: 'axis' },
-            grid: { top: 30, right: 24, bottom: 65, left: 70 },
-            xAxis: { type: 'category', data: trend.labels || [], boundaryGap: false },
+            tooltip: {
+                trigger: 'axis',
+                backgroundColor: 'rgba(15,23,42,0.92)',
+                borderWidth: 0,
+                padding: [8, 12],
+                textStyle: { color: '#fff', fontSize: 12 }
+            },
+            grid: { top: 28, right: 28, bottom: 48, left: 48 },
+            xAxis: {
+                type: 'category',
+                data: trend.labels || [],
+                boundaryGap: false,
+                axisTick: { show: false },
+                axisLine: { lineStyle: { color: '#e6ebf2' } },
+                axisLabel: { color: '#64748b', fontSize: 11 }
+            },
             yAxis: {
                 type: 'value',
                 min: 0,
                 max: group === 'operation' ? 40 : 100,
                 interval: group === 'operation' ? 10 : 20,
-                name: '评价总分',
-                nameLocation: 'middle',
-                nameGap: 46,
-                nameRotate: 0,
-                nameTextStyle: { lineHeight: 18 }
+                axisLabel: { color: '#94a3b8', fontSize: 11 },
+                splitLine: { lineStyle: { color: '#eef2f8', type: 'dashed' } }
             },
             series: [
                 {
@@ -530,9 +600,33 @@ const renderCharts = async () => {
                     smooth: true,
                     connectNulls: false,
                     data: trend[group] || [],
-                    itemStyle: { color: group === 'operation' ? '#67c23a' : '#409eff' },
-                    lineStyle: { color: group === 'operation' ? '#67c23a' : '#409eff' },
-                    label: { show: true }
+                    symbol: 'circle',
+                    symbolSize: 8,
+                    showSymbol: true,
+                    itemStyle: {
+                        color: '#fff',
+                        borderColor: accentDeep,
+                        borderWidth: 2.5
+                    },
+                    lineStyle: {
+                        width: 3,
+                        color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+                            { offset: 0, color: barTop },
+                            { offset: 1, color: accentDeep }
+                        ])
+                    },
+                    areaStyle: {
+                        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                            { offset: 0, color: group === 'operation' ? 'rgba(16,185,129,0.22)' : 'rgba(37,99,235,0.22)' },
+                            { offset: 1, color: group === 'operation' ? 'rgba(16,185,129,0)' : 'rgba(37,99,235,0)' }
+                        ])
+                    },
+                    label: {
+                        show: true,
+                        color: '#334155',
+                        fontSize: 11,
+                        fontWeight: 600
+                    }
                 }
             ]
         })
@@ -568,6 +662,12 @@ const handleSearch = () => {
         currentPagination.value.page_no = page
         fetchFinanceList()
     }
+const scoreLevel = (score: any) => {
+    const s = Number(score || 0)
+    if (s >= 4.5) return 'score-high'
+    if (s >= 4) return 'score-mid'
+    return 'score-low'
+}
 watch([activeScope, satisfactionTrendPeriod], renderCharts)
 onMounted(() => {
     fetchDepartments()
@@ -840,7 +940,85 @@ onBeforeUnmount(() => {
 }
 .table-section :deep(.el-table) {
     --el-table-border-color: var(--wb-border);
+    --el-table-header-text-color: var(--wb-ink);
+    --el-table-row-hover-bg-color: #f0f6ff;
     border-radius: 12px;
+    overflow: hidden;
+}
+.table-section :deep(.el-table th.el-table__cell) {
+    font-weight: 600;
+    color: var(--wb-ink);
+}
+.table-section :deep(.el-table td.el-table__cell) {
+    color: #475569;
+}
+
+/* 工程师姓名单元格 */
+.cell-engineer {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.cell-avatar {
+    width: 30px;
+    height: 30px;
+    flex-shrink: 0;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 600;
+    color: #fff;
+    background: linear-gradient(135deg, #4f9bff, #2563eb);
+}
+.cell-engineer-name {
+    font-weight: 600;
+    color: var(--wb-ink);
+}
+
+/* 等级标签 */
+.level-tag {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--wb-primary-deep);
+    background: rgba(37, 99, 235, 0.08);
+    border: 1px solid rgba(37, 99, 235, 0.16);
+}
+
+/* 工单总数强调 */
+.total-num {
+    font-weight: 700;
+    color: var(--wb-ink);
+    font-variant-numeric: tabular-nums;
+}
+
+/* 满意度分数徽章 */
+.score-badge {
+    display: inline-flex;
+    align-items: center;
+    min-width: 46px;
+    justify-content: center;
+    padding: 2px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+.score-high {
+    color: #16a34a;
+    background: #ecfdf3;
+}
+.score-mid {
+    color: #d97706;
+    background: #fffbeb;
+}
+.score-low {
+    color: #dc2626;
+    background: #fef2f2;
 }
 
 /* 分页 */
