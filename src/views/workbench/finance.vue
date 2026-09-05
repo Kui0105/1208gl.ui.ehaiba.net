@@ -99,20 +99,25 @@
                         shadow="never"
                         class="stat-card"
                         :class="{ 'stat-card--hero': item.key === 'completion_rate' }"
-                        ><div class="stat-title">{{ item.title }}</div>
+                        ><div class="stat-title">
+                            <span class="stat-dot" /><span>{{ item.title }}</span>
+                        </div>
                         <template v-if="item.key !== 'completion_rate'"
                             ><div class="stat-metrics">
                                 <div class="stat-metric">
-                                    <span class="stat-metric-num">{{
-                                        inspectionStats[item.key]?.manage_count || 0
-                                    }}</span
-                                    ><span class="stat-metric-label">管理台数</span>
+                                    <div class="stat-metric-num">
+                                        {{ inspectionStats[item.key]?.manage_count || 0
+                                        }}<span class="stat-metric-unit">台</span>
+                                    </div>
+                                    <span class="stat-metric-label">管理台数</span>
                                 </div>
+                                <span class="stat-vline" />
                                 <div class="stat-metric">
-                                    <span class="stat-metric-num">{{
-                                        inspectionStats[item.key]?.check_count || 0
-                                    }}</span
-                                    ><span class="stat-metric-label">点检台数</span>
+                                    <div class="stat-metric-num">
+                                        {{ inspectionStats[item.key]?.check_count || 0
+                                        }}<span class="stat-metric-unit">台</span>
+                                    </div>
+                                    <span class="stat-metric-label">点检台数</span>
                                 </div>
                             </div></template
                         ><template v-else
@@ -121,7 +126,7 @@
                                 }}<span class="stat-value-unit">%</span>
                             </div>
                             <div class="stat-detail">
-                                完成 / 已派单：{{
+                                完成 / 已派单 {{
                                     inspectionStats.completion_rate?.completed_count || 0
                                 }}
                                 / {{ inspectionStats.completion_rate?.dispatched_count || 0 }}
@@ -134,20 +139,27 @@
             <el-row :gutter="16" class="stats-row"
                 ><el-col v-for="item in workOrderCards" :key="item.key" :span="4"
                     ><el-card shadow="never" class="stat-card"
-                        ><div class="stat-title">{{ item.title }}</div>
+                        ><div class="stat-title">
+                            <span class="stat-dot stat-dot--amber" /><span>{{ item.title }}</span>
+                        </div>
                         <div class="stat-metrics">
                             <div class="stat-metric">
-                                <span class="stat-metric-num">{{
-                                    workOrderStats[item.key]?.order_count || 0
-                                }}</span
-                                ><span class="stat-metric-label">工单数量</span>
+                                <div class="stat-metric-num">
+                                    {{ workOrderStats[item.key]?.order_count || 0
+                                    }}<span class="stat-metric-unit">单</span>
+                                </div>
+                                <span class="stat-metric-label">工单数量</span>
                             </div>
-                            <div v-if="item.hasHours" class="stat-metric">
-                                <span class="stat-metric-num">{{
-                                    workOrderStats[item.key]?.hour_total || 0
-                                }}</span
-                                ><span class="stat-metric-label">工时合计</span>
-                            </div>
+                            <template v-if="item.hasHours"
+                                ><span class="stat-vline" />
+                                <div class="stat-metric">
+                                    <div class="stat-metric-num">
+                                        {{ workOrderStats[item.key]?.hour_total || 0
+                                        }}<span class="stat-metric-unit">h</span>
+                                    </div>
+                                    <span class="stat-metric-label">工时合计</span>
+                                </div></template
+                            >
                         </div></el-card
                     ></el-col
                 ></el-row
@@ -518,7 +530,7 @@ const renderCharts = async () => {
                 padding: [8, 12],
                 textStyle: { color: '#fff', fontSize: 12 }
             },
-            grid: { top: 24, right: 24, bottom: 110, left: 56 },
+            grid: { top: 36, right: 20, bottom: 96, left: 44 },
             xAxis: {
                 type: 'category',
                 data: (satisfaction.dimensions || []).map(
@@ -528,9 +540,8 @@ const renderCharts = async () => {
                 axisLine: { lineStyle: { color: '#e6ebf2' } },
                 axisLabel: {
                     interval: 0,
-                    width: 68,
-                    overflow: 'break',
-                    lineHeight: 15,
+                    rotate: 32,
+                    margin: 12,
                     color: '#64748b',
                     fontSize: 11
                 }
@@ -581,14 +592,14 @@ const renderCharts = async () => {
                 padding: [8, 12],
                 textStyle: { color: '#fff', fontSize: 12 }
             },
-            grid: { top: 28, right: 28, bottom: 48, left: 48 },
+            grid: { top: 36, right: 20, bottom: 96, left: 44 },
             xAxis: {
                 type: 'category',
                 data: trend.labels || [],
                 boundaryGap: false,
                 axisTick: { show: false },
                 axisLine: { lineStyle: { color: '#e6ebf2' } },
-                axisLabel: { color: '#64748b', fontSize: 11 }
+                axisLabel: { color: '#64748b', fontSize: 11, margin: 12 }
             },
             yAxis: {
                 type: 'value',
@@ -785,48 +796,85 @@ onBeforeUnmount(() => {
     border: 1px solid var(--wb-border) !important;
     border-radius: 14px !important;
     overflow: hidden;
-    transition: transform 0.25s ease, box-shadow 0.25s ease;
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
 }
 .stat-card :deep(.el-card__body) {
-    padding: 16px 18px;
+    padding: 18px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
 }
 .stat-card:hover {
     transform: translateY(-3px);
+    border-color: rgba(37, 99, 235, 0.28) !important;
     box-shadow: var(--wb-shadow-hover) !important;
 }
 .stat-title {
+    display: flex;
+    align-items: center;
+    gap: 7px;
     font-size: 13px;
     color: var(--wb-muted);
-    margin-bottom: 14px;
-    letter-spacing: 0.3px;
+    margin-bottom: 18px;
+    letter-spacing: 0.2px;
+    white-space: nowrap;
+}
+.stat-dot {
+    width: 7px;
+    height: 7px;
+    flex-shrink: 0;
+    border-radius: 2px;
+    background: var(--wb-primary);
+}
+.stat-dot--amber {
+    background: #f59e0b;
 }
 .stat-metrics {
     display: flex;
-    gap: 24px;
+    align-items: center;
+    gap: 16px;
+    margin-top: auto;
 }
 .stat-metric {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 6px;
 }
 .stat-metric-num {
-    font-size: 26px;
+    display: flex;
+    align-items: baseline;
+    font-size: 28px;
     font-weight: 700;
     line-height: 1;
     color: var(--wb-ink);
     font-variant-numeric: tabular-nums;
     letter-spacing: -0.5px;
 }
+.stat-metric-unit {
+    margin-left: 3px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--wb-faint);
+}
 .stat-metric-label {
     font-size: 12px;
     color: var(--wb-faint);
 }
+.stat-vline {
+    width: 1px;
+    height: 34px;
+    background: var(--wb-border);
+    flex-shrink: 0;
+}
 .stat-value {
-    font-size: 34px;
+    display: flex;
+    align-items: baseline;
+    font-size: 38px;
     font-weight: 700;
     line-height: 1;
     font-variant-numeric: tabular-nums;
-    letter-spacing: -0.5px;
+    letter-spacing: -1px;
+    margin-top: auto;
     margin-bottom: 8px;
 }
 .stat-value-unit {
@@ -837,6 +885,7 @@ onBeforeUnmount(() => {
 .stat-detail {
     font-size: 12px;
     line-height: 18px;
+    color: var(--wb-faint);
 }
 
 /* 完成率主视觉卡片 */
@@ -846,13 +895,16 @@ onBeforeUnmount(() => {
     box-shadow: 0 16px 32px -16px rgba(37, 99, 235, 0.6) !important;
 }
 .stat-card--hero .stat-title {
-    color: rgba(255, 255, 255, 0.85);
+    color: rgba(255, 255, 255, 0.9);
+}
+.stat-card--hero .stat-dot {
+    background: rgba(255, 255, 255, 0.85);
 }
 .stat-card--hero .stat-value {
     color: #ffffff;
 }
 .stat-card--hero .stat-detail {
-    color: rgba(255, 255, 255, 0.8);
+    color: rgba(255, 255, 255, 0.82);
 }
 
 /* 满意度 / 趋势：并排一行 */
