@@ -92,98 +92,74 @@
                 name="operation"
         /></el-tabs>
         <div v-if="activeScope === 'normal'" class="stats-section">
-            <!-- 设备点检统计：每卡含进度条 -->
-            <div class="section-head">
-                <div class="section-title">设备点检统计</div>
-                <div class="section-meta">
-                    完成率 {{ inspectionOverall.rate }}% · {{ inspectionOverall.completed }}/{{
-                        inspectionOverall.dispatched
-                    }}
-                    · 共 {{ inspectionOverall.count }} 个机型
-                </div>
-            </div>
-            <div class="inspect-grid">
-                <div
-                    v-for="row in inspectionView"
-                    :key="row.key"
-                    class="inspect-card"
-                    :class="{ 'inspect-card--warn': row.tone === 'warn' }"
-                >
-                    <div class="inspect-head">
-                        <span class="inspect-name">{{ row.title }}</span>
-                        <span class="inspect-dot" :class="'dot--' + row.tone" />
-                    </div>
-                    <div class="inspect-value">
-                        {{ row.check }}<span class="inspect-total"> / {{ row.manage }} 台</span>
-                    </div>
-                    <div class="inspect-track">
-                        <div
-                            class="inspect-fill"
-                            :class="'fill--' + row.tone"
-                            :style="{ width: row.rate + '%' }"
-                        />
-                    </div>
-                    <div class="inspect-foot">
-                        <span class="inspect-rate" :class="'rate--' + row.tone"
-                            >点检 {{ row.rate }}%</span
-                        >
-                        <span class="inspect-tag" :class="'tag--' + row.tone">{{
-                            row.status
-                        }}</span>
-                    </div>
-                </div>
-            </div>
-            <!-- 工单统计：按数量排序 · 占比 + 工时 -->
-            <div class="section-head">
-                <div class="section-title">工单统计</div>
-                <div class="section-meta">共 {{ orderStatsView.total }} 单</div>
-            </div>
-            <div class="order-list">
-                <div v-for="row in orderStatsView.main" :key="row.key" class="order-item">
-                    <div class="order-item-head">
-                        <span class="order-name">{{ row.title }}</span>
-                        <span class="order-metric"
-                            >{{ row.count }} 单<template v-if="row.hasHours">
-                                · {{ row.hours }} h</template
-                            >
-                            · {{ row.pct }}%</span
-                        >
-                    </div>
-                    <div class="order-track">
-                        <div
-                            class="order-fill"
-                            :class="'order-fill--' + row.rank"
-                            :style="{ width: row.width + '%' }"
-                        />
-                    </div>
-                </div>
-                <div v-if="orderStatsView.rest.length" class="order-item">
-                    <div class="order-item-head">
-                        <span class="order-name"
-                            >{{ orderStatsView.rest.map((r) => r.short).join(' / ') }}工单</span
-                        >
-                        <span class="order-metric"
-                            >{{ orderStatsView.rest.map((r) => r.count).join(' / ') }} 单 · 合计
-                            {{ orderStatsView.restPct }}%</span
-                        >
-                    </div>
-                    <div class="order-group">
-                        <div
-                            v-for="r in orderStatsView.rest"
-                            :key="r.key"
-                            class="order-group-item"
-                        >
-                            <div class="order-track order-track--sm">
-                                <div
-                                    class="order-fill order-fill--rest"
-                                    :style="{ width: r.width + '%' }"
-                                />
-                            </div>
-                            <span class="order-group-label">{{ r.short }} {{ r.count }}</span>
+            <div class="section-title">点检统计</div>
+            <el-row :gutter="16" class="stats-row"
+                ><el-col v-for="item in inspectionCards" :key="item.key" :span="4"
+                    ><el-card
+                        shadow="never"
+                        class="stat-card"
+                        :class="{ 'stat-card--hero': item.key === 'completion_rate' }"
+                        ><div class="stat-title">
+                            <span class="stat-dot" /><span>{{ item.title }}</span>
                         </div>
-                    </div>
-                </div>
-            </div>
+                        <template v-if="item.key !== 'completion_rate'"
+                            ><div class="stat-rows">
+                                <div class="stat-row">
+                                    <span class="stat-row-label">管理台数</span>
+                                    <span class="stat-row-value"
+                                        >{{ inspectionStats[item.key]?.manage_count || 0
+                                        }}<span class="stat-row-unit">台</span></span
+                                    >
+                                </div>
+                                <div class="stat-row">
+                                    <span class="stat-row-label">点检台数</span>
+                                    <span class="stat-row-value"
+                                        >{{ inspectionStats[item.key]?.check_count || 0
+                                        }}<span class="stat-row-unit">台</span></span
+                                    >
+                                </div>
+                            </div></template
+                        ><template v-else
+                            ><div class="stat-value">
+                                {{ inspectionStats.completion_rate?.rate || 0
+                                }}<span class="stat-value-unit">%</span>
+                            </div>
+                            <div class="stat-detail">
+                                完成 / 已派单 {{
+                                    inspectionStats.completion_rate?.completed_count || 0
+                                }}
+                                / {{ inspectionStats.completion_rate?.dispatched_count || 0 }}
+                            </div></template
+                        ></el-card
+                    ></el-col
+                ></el-row
+            >
+            <div class="section-title">工单统计</div>
+            <el-row :gutter="16" class="stats-row"
+                ><el-col v-for="item in workOrderCards" :key="item.key" :span="4"
+                    ><el-card shadow="never" class="stat-card"
+                        ><div class="stat-title">
+                            <span class="stat-dot stat-dot--amber" /><span>{{ item.title }}</span>
+                        </div>
+                        <div class="stat-rows">
+                            <div class="stat-row">
+                                <span class="stat-row-label">工单数量</span>
+                                <span class="stat-row-value"
+                                    >{{ workOrderStats[item.key]?.order_count || 0
+                                    }}<span class="stat-row-unit">单</span></span
+                                >
+                            </div>
+                            <div v-if="item.hasHours" class="stat-row">
+                                <span class="stat-row-label">工时合计</span>
+                                <span class="stat-row-value"
+                                    >{{ workOrderStats[item.key]?.hour_total || 0
+                                    }}<span class="stat-row-unit">h</span></span
+                                >
+                            </div>
+                        </div></el-card
+                    ></el-col
+                ></el-row
+            >
         </div>
         <div class="charts-row">
             <div class="satisfaction-section">
@@ -462,62 +438,6 @@ const inspectionCards = [
         { key: 'operation_work_mesh_install', label: '网片安装' },
         { key: 'operation_work_other', label: '其它' }
     ]
-// 点检统计视图：由 manage_count / check_count 派生点检率与状态标签（不改动数据结构）
-const inspectionView = computed(() => {
-    const machines = inspectionCards.filter((c) => c.key !== 'completion_rate')
-    const rows = machines.map((m) => {
-        const s: any = inspectionStats.value[m.key] || {}
-        const manage = Number(s.manage_count || 0)
-        const check = Number(s.check_count || 0)
-        const rate = manage ? Math.round((check / manage) * 100) : 0
-        return { key: m.key, title: m.title, manage, check, rate }
-    })
-    const avg = rows.length ? rows.reduce((sum, r) => sum + r.rate, 0) / rows.length : 0
-    return rows.map((r) => {
-        let status = '达标',
-            tone = 'good'
-        if (r.rate < 75) {
-            status = '需关注'
-            tone = 'warn'
-        } else if (r.rate < avg) {
-            status = '低于均值'
-            tone = 'normal'
-        }
-        return { ...r, status, tone }
-    })
-})
-const inspectionOverall = computed(() => {
-    const c: any = inspectionStats.value.completion_rate || {}
-    return {
-        rate: c.rate || 0,
-        completed: c.completed_count || 0,
-        dispatched: c.dispatched_count || 0,
-        count: inspectionView.value.length
-    }
-})
-// 工单统计视图：按数量排序，前三名独立成条，其余合并为一行（占比按总量、条宽按最大值）
-const orderStatsView = computed(() => {
-    const all = workOrderCards.map((c) => {
-        const s: any = workOrderStats.value[c.key] || {}
-        return {
-            key: c.key,
-            title: c.title,
-            short: c.title.replace('工单', ''),
-            count: Number(s.order_count || 0),
-            hours: Number(s.hour_total || 0),
-            hasHours: c.hasHours
-        }
-    })
-    const total = all.reduce((sum, o) => sum + o.count, 0)
-    const sorted = [...all].sort((a, b) => b.count - a.count)
-    const max = sorted[0]?.count || 1
-    const pct = (n: number) => (total ? Math.round((n / total) * 1000) / 10 : 0)
-    const width = (n: number) => Math.round((n / max) * 100)
-    const main = sorted.slice(0, 3).map((o, i) => ({ ...o, rank: i, pct: pct(o.count), width: width(o.count) }))
-    const rest = sorted.slice(3).map((o) => ({ ...o, width: width(o.count) }))
-    const restCount = rest.reduce((sum, o) => sum + o.count, 0)
-    return { total, main, rest, restCount, restPct: pct(restCount) }
-})
 const formatDate = (date: any) => {
     const d = new Date(date)
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
@@ -860,209 +780,123 @@ onBeforeUnmount(() => {
     border-radius: 3px;
 }
 
-/* 统计区块 */
+/* 指标卡片 */
 .stats-section {
     margin-bottom: 4px;
 }
-.section-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 14px;
+.stats-row {
+    margin-bottom: 16px;
 }
-.section-head .section-title {
-    margin-bottom: 0;
-}
-.section-meta {
-    font-size: 12px;
-    color: var(--wb-faint);
-    font-variant-numeric: tabular-nums;
-}
-
-/* 点检统计卡片 */
-.inspect-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 16px;
-    margin-bottom: 24px;
-}
-.inspect-card {
-    background: var(--wb-surface);
-    border: 1px solid var(--wb-border);
-    border-radius: 14px;
-    padding: 16px 18px;
+.stat-card {
+    height: 100%;
+    border: 1px solid var(--wb-border) !important;
+    border-radius: 14px !important;
+    overflow: hidden;
     transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
 }
-.inspect-card:hover {
+.stat-card :deep(.el-card__body) {
+    padding: 18px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+.stat-card:hover {
     transform: translateY(-3px);
-    border-color: rgba(37, 99, 235, 0.28);
-    box-shadow: var(--wb-shadow-hover);
+    border-color: rgba(37, 99, 235, 0.28) !important;
+    box-shadow: var(--wb-shadow-hover) !important;
 }
-.inspect-card--warn {
-    border-color: rgba(245, 158, 11, 0.5);
-    background: linear-gradient(180deg, rgba(245, 158, 11, 0.05), rgba(245, 158, 11, 0));
-}
-.inspect-head {
+.stat-title {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    margin-bottom: 12px;
+    gap: 7px;
+    font-size: 13px;
+    color: var(--wb-muted);
+    margin-bottom: 18px;
+    letter-spacing: 0.2px;
+    white-space: nowrap;
 }
-.inspect-name {
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--wb-ink);
+.stat-dot {
+    width: 7px;
+    height: 7px;
+    flex-shrink: 0;
+    border-radius: 2px;
+    background: var(--wb-primary);
 }
-.inspect-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-}
-.dot--good {
-    background: #2563eb;
-}
-.dot--normal {
-    background: #6366f1;
-}
-.dot--warn {
+.stat-dot--amber {
     background: #f59e0b;
-    box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.16);
 }
-.inspect-value {
-    font-size: 30px;
+.stat-rows {
+    margin-top: auto;
+    display: flex;
+    flex-direction: column;
+}
+.stat-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    padding: 9px 0;
+    white-space: nowrap;
+}
+.stat-row + .stat-row {
+    border-top: 1px dashed var(--wb-border);
+}
+.stat-row-label {
+    font-size: 12px;
+    color: var(--wb-faint);
+}
+.stat-row-value {
+    font-size: 22px;
     font-weight: 700;
     line-height: 1;
     color: var(--wb-ink);
     font-variant-numeric: tabular-nums;
-    letter-spacing: -1px;
-    margin-bottom: 14px;
+    letter-spacing: -0.5px;
 }
-.inspect-total {
-    font-size: 13px;
+.stat-row-unit {
+    margin-left: 2px;
+    font-size: 12px;
     font-weight: 500;
     color: var(--wb-faint);
-    letter-spacing: 0;
 }
-.inspect-track {
-    height: 6px;
-    border-radius: 999px;
-    background: #eef2f8;
-    overflow: hidden;
-    margin-bottom: 10px;
-}
-.inspect-fill {
-    height: 100%;
-    border-radius: 999px;
-    transition: width 0.5s ease;
-}
-.fill--good {
-    background: linear-gradient(90deg, #60a5fa, #2563eb);
-}
-.fill--normal {
-    background: linear-gradient(90deg, #818cf8, #6366f1);
-}
-.fill--warn {
-    background: linear-gradient(90deg, #fbbf24, #f59e0b);
-}
-.inspect-foot {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-.inspect-rate {
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--wb-muted);
-}
-.rate--warn {
-    color: #d97706;
-}
-.inspect-tag {
-    font-size: 11px;
-    font-weight: 500;
-    padding: 2px 9px;
-    border-radius: 999px;
-}
-.tag--good {
-    color: #16a34a;
-    background: #ecfdf3;
-}
-.tag--normal {
-    color: #64748b;
-    background: #f1f5f9;
-}
-.tag--warn {
-    color: #d97706;
-    background: #fffbeb;
-}
-
-/* 工单统计横向条形榜 */
-.order-list {
-    background: var(--wb-surface);
-    border: 1px solid var(--wb-border);
-    border-radius: 14px;
-    padding: 20px 22px;
-    margin-bottom: 4px;
-}
-.order-item + .order-item {
-    margin-top: 20px;
-}
-.order-item-head {
+.stat-value {
     display: flex;
     align-items: baseline;
-    justify-content: space-between;
-    margin-bottom: 9px;
+    font-size: 38px;
+    font-weight: 700;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -1px;
+    margin-top: auto;
+    margin-bottom: 8px;
 }
-.order-name {
-    font-size: 13px;
+.stat-value-unit {
+    font-size: 18px;
     font-weight: 600;
-    color: var(--wb-ink);
+    margin-left: 2px;
 }
-.order-metric {
+.stat-detail {
     font-size: 12px;
-    color: var(--wb-muted);
-    font-variant-numeric: tabular-nums;
-}
-.order-track {
-    height: 9px;
-    border-radius: 999px;
-    background: #eef2f8;
-    overflow: hidden;
-}
-.order-track--sm {
-    height: 7px;
-}
-.order-fill {
-    height: 100%;
-    border-radius: 999px;
-    transition: width 0.5s ease;
-}
-.order-fill--0 {
-    background: linear-gradient(90deg, #3b82f6, #1d4ed8);
-}
-.order-fill--1 {
-    background: linear-gradient(90deg, #60a5fa, #2563eb);
-}
-.order-fill--2 {
-    background: linear-gradient(90deg, #93c5fd, #3b82f6);
-}
-.order-fill--rest {
-    background: #cbd5e1;
-}
-.order-group {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 16px;
-}
-.order-group-item {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
-.order-group-label {
-    font-size: 11px;
+    line-height: 18px;
     color: var(--wb-faint);
-    font-variant-numeric: tabular-nums;
+}
+
+/* 完成率主视觉卡片 */
+.stat-card--hero {
+    border: none !important;
+    background: linear-gradient(135deg, #3b82f6 0%, var(--wb-primary-deep) 100%) !important;
+    box-shadow: 0 16px 32px -16px rgba(37, 99, 235, 0.6) !important;
+}
+.stat-card--hero .stat-title {
+    color: rgba(255, 255, 255, 0.9);
+}
+.stat-card--hero .stat-dot {
+    background: rgba(255, 255, 255, 0.85);
+}
+.stat-card--hero .stat-value {
+    color: #ffffff;
+}
+.stat-card--hero .stat-detail {
+    color: rgba(255, 255, 255, 0.82);
 }
 
 /* 满意度 / 趋势：并排一行 */
