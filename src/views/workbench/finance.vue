@@ -162,7 +162,7 @@
                                 {{
                                     activeScope === 'operation'
                                         ? '操作工单满意度平均总分'
-                                        : '非操作工单满意度平均总分'
+                                        : '工单满意度平均总分'
                                 }}
                             </div>
                             <div class="satisfaction-count">
@@ -188,7 +188,7 @@
                             {{
                                 activeScope === 'operation'
                                     ? '操作工单满意度趋势'
-                                    : '非操作工单满意度趋势'
+                                    : '工单满意度趋势'
                             }}
                         </div>
                         <el-radio-group v-model="satisfactionTrendPeriod" size="small"
