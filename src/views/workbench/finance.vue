@@ -92,23 +92,36 @@
                 name="operation"
         /></el-tabs>
         <div v-if="activeScope === 'normal'" class="stats-section">
-            <el-row :gutter="20" class="stats-row"
+            <div class="section-title">点检统计</div>
+            <el-row :gutter="16" class="stats-row"
                 ><el-col v-for="item in inspectionCards" :key="item.key" :span="4"
-                    ><el-card shadow="hover" class="stat-card"
+                    ><el-card
+                        shadow="never"
+                        class="stat-card"
+                        :class="{ 'stat-card--hero': item.key === 'completion_rate' }"
                         ><div class="stat-title">{{ item.title }}</div>
                         <template v-if="item.key !== 'completion_rate'"
-                            ><div class="stat-detail">
-                                管理台数：{{ inspectionStats[item.key]?.manage_count || 0 }} 台
-                            </div>
-                            <div class="stat-detail">
-                                点检台数：{{ inspectionStats[item.key]?.check_count || 0 }} 台
+                            ><div class="stat-metrics">
+                                <div class="stat-metric">
+                                    <span class="stat-metric-num">{{
+                                        inspectionStats[item.key]?.manage_count || 0
+                                    }}</span
+                                    ><span class="stat-metric-label">管理台数</span>
+                                </div>
+                                <div class="stat-metric">
+                                    <span class="stat-metric-num">{{
+                                        inspectionStats[item.key]?.check_count || 0
+                                    }}</span
+                                    ><span class="stat-metric-label">点检台数</span>
+                                </div>
                             </div></template
                         ><template v-else
                             ><div class="stat-value">
-                                {{ inspectionStats.completion_rate?.rate || 0 }}%
+                                {{ inspectionStats.completion_rate?.rate || 0
+                                }}<span class="stat-value-unit">%</span>
                             </div>
                             <div class="stat-detail">
-                                完成/已派单：{{
+                                完成 / 已派单：{{
                                     inspectionStats.completion_rate?.completed_count || 0
                                 }}
                                 / {{ inspectionStats.completion_rate?.dispatched_count || 0 }}
@@ -116,15 +129,25 @@
                         ></el-card
                     ></el-col
                 ></el-row
-            ><el-row :gutter="20" class="stats-row"
+            >
+            <div class="section-title">工单统计</div>
+            <el-row :gutter="16" class="stats-row"
                 ><el-col v-for="item in workOrderCards" :key="item.key" :span="4"
-                    ><el-card shadow="hover" class="stat-card"
+                    ><el-card shadow="never" class="stat-card"
                         ><div class="stat-title">{{ item.title }}</div>
-                        <div class="stat-detail">
-                            工单数量：{{ workOrderStats[item.key]?.order_count || 0 }} 单
-                        </div>
-                        <div v-if="item.hasHours" class="stat-detail">
-                            工时合计：{{ workOrderStats[item.key]?.hour_total || 0 }} 小时
+                        <div class="stat-metrics">
+                            <div class="stat-metric">
+                                <span class="stat-metric-num">{{
+                                    workOrderStats[item.key]?.order_count || 0
+                                }}</span
+                                ><span class="stat-metric-label">工单数量</span>
+                            </div>
+                            <div v-if="item.hasHours" class="stat-metric">
+                                <span class="stat-metric-num">{{
+                                    workOrderStats[item.key]?.hour_total || 0
+                                }}</span
+                                ><span class="stat-metric-label">工时合计</span>
+                            </div>
                         </div></el-card
                     ></el-col
                 ></el-row
@@ -134,7 +157,7 @@
             <el-card shadow="hover" class="satisfaction-card"
                 ><div class="satisfaction-card-head">
                     <div>
-                        <div class="stat-title">
+                        <div class="card-title">
                             {{
                                 activeScope === 'operation'
                                     ? '操作工单满意度平均总分'
@@ -159,7 +182,7 @@
         </div>
         <div class="satisfaction-trend-section">
             <div class="satisfaction-trend-head">
-                <div class="stat-title">
+                <div class="section-title">
                     {{
                         activeScope === 'operation' ? '操作工单满意度趋势' : '非操作工单满意度趋势'
                     }}
@@ -174,7 +197,10 @@
             /></el-card>
         </div>
         <div class="table-section">
-            <div class="table-note">列表中的工单数量均按复审通过工单统计。</div>
+            <div class="table-head">
+                <div class="section-title">工程师工作量明细</div>
+                <div class="table-note">列表中的工单数量均按复审通过工单统计。</div>
+            </div>
             <el-table :data="currentTableData" size="small" style="width: 100%" v-loading="loading"
                 ><el-table-column
                     prop="engineer_name"
@@ -559,82 +585,219 @@ onBeforeUnmount(() => {
 </script>
 <style scoped>
 .finance-container {
-    min-height: 100vh;
+    --wb-surface: #ffffff;
+    --wb-border: #e6ebf2;
+    --wb-ink: #1e293b;
+    --wb-muted: #64748b;
+    --wb-faint: #94a3b8;
+    --wb-primary: #2563eb;
+    --wb-primary-deep: #1d4ed8;
+    --wb-radius: 16px;
+    --wb-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 12px 28px -14px rgba(15, 23, 42, 0.14);
+    --wb-shadow-hover: 0 2px 6px rgba(15, 23, 42, 0.06), 0 20px 40px -18px rgba(15, 23, 42, 0.24);
+    color: var(--wb-ink);
 }
+
+/* 卡片通用外观 */
 .filter-section,
+.scope-tabs,
+.satisfaction-card,
+.satisfaction-trend-card,
 .table-section,
 .pagination-section {
-    background: #fff;
-    padding: 20px;
-    border-radius: 4px;
-    margin-bottom: 20px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+    background: var(--wb-surface);
+    border: 1px solid var(--wb-border);
+    border-radius: var(--wb-radius);
+    box-shadow: var(--wb-shadow);
+}
+
+/* 区块标题：强调竖条 */
+.section-title {
+    position: relative;
+    padding-left: 12px;
+    margin-bottom: 14px;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    color: var(--wb-ink);
+}
+.section-title::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 4px;
+    height: 15px;
+    border-radius: 3px;
+    background: linear-gradient(180deg, var(--wb-primary), var(--wb-primary-deep));
+}
+
+/* 筛选区 */
+.filter-section {
+    padding: 18px 20px 4px;
+    margin-bottom: 16px;
 }
 .filter-form {
-    margin-bottom: -18px;
+    margin-bottom: 0;
 }
+.filter-form :deep(.el-form-item__label) {
+    color: var(--wb-muted);
+    font-weight: 500;
+}
+
+/* Tab 切换 */
 .scope-tabs {
-    background: #fff;
-    padding: 0 20px;
-    margin-bottom: 20px;
+    padding: 4px 20px 0;
+    margin-bottom: 16px;
 }
+.scope-tabs :deep(.el-tabs__header) {
+    margin-bottom: 0;
+}
+.scope-tabs :deep(.el-tabs__item) {
+    font-size: 15px;
+    height: 48px;
+    color: var(--wb-muted);
+}
+.scope-tabs :deep(.el-tabs__item.is-active) {
+    color: var(--wb-primary);
+    font-weight: 600;
+}
+.scope-tabs :deep(.el-tabs__active-bar) {
+    background-color: var(--wb-primary);
+    height: 3px;
+    border-radius: 3px;
+}
+
+/* 指标卡片 */
 .stats-section {
-    margin-bottom: 20px;
+    margin-bottom: 4px;
 }
 .stats-row {
-    margin-bottom: 20px;
+    margin-bottom: 16px;
 }
 .stat-card {
-    min-height: 100px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
+    height: 100%;
+    border: 1px solid var(--wb-border) !important;
+    border-radius: 14px !important;
+    overflow: hidden;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.stat-card :deep(.el-card__body) {
+    padding: 16px 18px;
+}
+.stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--wb-shadow-hover) !important;
 }
 .stat-title {
-    font-size: 14px;
-    color: #606266;
-    margin-bottom: 8px;
+    font-size: 13px;
+    color: var(--wb-muted);
+    margin-bottom: 14px;
+    letter-spacing: 0.3px;
+}
+.stat-metrics {
+    display: flex;
+    gap: 24px;
+}
+.stat-metric {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.stat-metric-num {
+    font-size: 26px;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--wb-ink);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.5px;
+}
+.stat-metric-label {
+    font-size: 12px;
+    color: var(--wb-faint);
 }
 .stat-value {
-    font-size: 20px;
+    font-size: 34px;
+    font-weight: 700;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.5px;
+    margin-bottom: 8px;
+}
+.stat-value-unit {
+    font-size: 18px;
     font-weight: 600;
-    color: #303133;
+    margin-left: 2px;
 }
 .stat-detail {
-    font-size: 13px;
-    line-height: 20px;
-    color: #606266;
+    font-size: 12px;
+    line-height: 18px;
 }
+
+/* 完成率主视觉卡片 */
+.stat-card--hero {
+    border: none !important;
+    background: linear-gradient(135deg, #3b82f6 0%, var(--wb-primary-deep) 100%) !important;
+    box-shadow: 0 16px 32px -16px rgba(37, 99, 235, 0.6) !important;
+}
+.stat-card--hero .stat-title {
+    color: rgba(255, 255, 255, 0.85);
+}
+.stat-card--hero .stat-value {
+    color: #ffffff;
+}
+.stat-card--hero .stat-detail {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+/* 满意度 / 趋势 */
 .satisfaction-section,
 .satisfaction-trend-section {
-    margin-bottom: 20px;
+    margin-bottom: 16px;
 }
 .satisfaction-card {
     min-height: 420px;
+}
+.satisfaction-card :deep(.el-card__body) {
+    padding: 22px;
 }
 .satisfaction-card-head,
 .satisfaction-trend-head {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    margin-bottom: 8px;
+}
+.card-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--wb-ink);
 }
 .satisfaction-count {
-    font-size: 13px;
-    color: #909399;
+    margin-top: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--wb-primary-deep);
+    background: rgba(37, 99, 235, 0.08);
+    padding: 3px 10px;
+    border-radius: 999px;
+    display: inline-block;
 }
 .satisfaction-total {
     display: flex;
     align-items: baseline;
 }
 .satisfaction-total-value {
-    font-size: 28px;
-    font-weight: 600;
-    color: #303133;
+    font-size: 40px;
+    font-weight: 700;
+    color: var(--wb-primary);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -1px;
 }
 .satisfaction-total-unit {
-    margin-left: 4px;
-    color: #909399;
+    margin-left: 6px;
+    color: var(--wb-faint);
     font-size: 13px;
 }
 .satisfaction-chart {
@@ -644,17 +807,53 @@ onBeforeUnmount(() => {
 .satisfaction-trend-card {
     min-height: 330px;
 }
+.satisfaction-trend-card :deep(.el-card__body) {
+    padding: 16px 22px 22px;
+}
 .satisfaction-trend-chart {
     width: 100%;
     height: 280px;
 }
-.table-note {
-    margin-bottom: 12px;
-    color: #909399;
-    font-size: 13px;
+
+/* 表格 */
+.table-section {
+    padding: 22px;
+    margin-bottom: 16px;
 }
+.table-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+}
+.table-head .section-title {
+    margin-bottom: 0;
+}
+.table-note {
+    color: var(--wb-faint);
+    font-size: 12px;
+}
+.table-section :deep(.el-table th.el-table__cell) {
+    background: #f6f9fe;
+    color: var(--wb-ink);
+    font-weight: 600;
+}
+.table-section :deep(.el-table) {
+    --el-table-border-color: var(--wb-border);
+    border-radius: 12px;
+}
+
+/* 分页 */
 .pagination-section {
+    padding: 16px 22px;
     display: flex;
     justify-content: flex-end;
+    margin-bottom: 0;
+}
+
+@media (max-width: 1200px) {
+    .satisfaction-total-value {
+        font-size: 32px;
+    }
 }
 </style>
