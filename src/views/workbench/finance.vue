@@ -87,8 +87,8 @@
             ></el-form>
         </div>
         <el-tabs v-model="activeScope" class="scope-tabs" @tab-change="handleScopeChange"
-            ><el-tab-pane label="非操作工程师" name="normal" /><el-tab-pane
-                label="操作工程师"
+            ><el-tab-pane label="工单数据统计" name="normal" /><el-tab-pane
+                label="操作工单统计"
                 name="operation"
         /></el-tabs>
         <div v-if="activeScope === 'normal'" class="stats-section">
@@ -909,17 +909,10 @@ onBeforeUnmount(() => {
 .mini-card--hero {
     justify-content: center;
     gap: 8px;
-    border: none;
-    background: linear-gradient(140deg, #e8604f 0%, var(--wb-primary) 45%, var(--wb-primary-deep) 100%);
-    box-shadow: 0 12px 26px -14px rgba(215, 65, 48, 0.6);
-}
-.mini-card--hero:hover {
-    border: none;
-    box-shadow: 0 14px 30px -14px rgba(215, 65, 48, 0.7);
 }
 .hero-cap {
     font-size: 13px;
-    color: rgba(255, 255, 255, 0.9);
+    color: var(--wb-faint);
     letter-spacing: 0.2px;
 }
 .hero-val {
@@ -928,7 +921,7 @@ onBeforeUnmount(() => {
     font-size: 34px;
     font-weight: 700;
     line-height: 1;
-    color: #fff;
+    color: var(--wb-primary);
     font-variant-numeric: tabular-nums;
     letter-spacing: -1px;
 }
@@ -941,22 +934,22 @@ onBeforeUnmount(() => {
     width: 100%;
     height: 5px;
     border-radius: 999px;
-    background: rgba(255, 255, 255, 0.28);
+    background: #eef0f3;
     overflow: hidden;
 }
 .hero-fill {
     height: 100%;
     border-radius: 999px;
-    background: #fff;
+    background: linear-gradient(90deg, #f07a68, var(--wb-primary-deep));
     transition: width 0.6s ease;
 }
 .hero-detail {
     font-size: 12px;
-    color: rgba(255, 255, 255, 0.85);
+    color: var(--wb-muted);
     font-variant-numeric: tabular-nums;
 }
 .hero-detail b {
-    color: #fff;
+    color: var(--wb-ink);
     font-weight: 600;
 }
 
@@ -966,7 +959,7 @@ onBeforeUnmount(() => {
     border: 1px solid var(--wb-border);
     border-radius: 14px;
     padding: 8px 22px;
-    margin-bottom: 4px;
+    margin-bottom: 24px;
 }
 .rank-item {
     display: flex;
